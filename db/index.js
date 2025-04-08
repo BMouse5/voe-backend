@@ -1,17 +1,23 @@
 const { Pool } = require('pg');
 
 // Конфигурация подключения к базе данных PostgreSQL
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 
-  pool.query('SELECT NOW()', (err, res) => {
-    if (err) {
-      console.error('Ошибка подключения к базе данных:', err);
-    } else {
-      console.log('Успешное подключение к базе данных. Текущее время:', res.rows[0].now);
-    }
-  });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  // Оптимальные настройки для пула соединений
+  max: 10,                // Максимальное количество клиентов в пуле
+  idleTimeoutMillis: 30000, // Закрыть неиспользуемые соединения после 30 секунд
+  connectionTimeoutMillis: 5000 // Время ожидания подключения
+});
+
+// Проверка подключения
+pool.query('SELECT NOW()')
+  .then(res => console.log('Database connection successful:', res.rows[0].now))
+  .catch(err => console.error('Database connection error:', err));
 
 module.exports = pool;
