@@ -7,7 +7,7 @@ const productRoutes = require('./routes/productRoutes');
 const consultationRoutes = require('./routes/consultationRoutes');
 const cors = require('cors');
 const corsOptions = {
-    origin: 'https://voe-client-navy.vercel.app',  // Порт, на котором работает ваше Vue приложение
+    origin: 'http://localhost:5173',  // Порт, на котором работает ваше Vue приложение
     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Разрешённые методы
     allowedHeaders: ['Content-Type']  // Разрешённые заголовки
 };
