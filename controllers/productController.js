@@ -29,7 +29,7 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
     const { name, description, category_id } = req.body;
-    const image_url = req.file ? `/uploads/${req.file.filename}` : null; // Путь к изображению
+    const image_url = req.file ? req.file.path : null; // Путь к изображению
   
     if (!name || !description || !category_id || !image_url) {
       return res.status(400).json({ error: 'Все поля обязательны' });
@@ -47,7 +47,7 @@ const createProduct = async (req, res) => {
   const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { name, description, category_id } = req.body;
-    const image_url = req.file ? `/uploads/${req.file.filename}` : null;  // Если новое изображение загружено, то используем его
+    const image_url = req.file ? req.file.path : null;  // Если новое изображение загружено, то используем его
   
     try {
       // Получаем текущий товар по ID
