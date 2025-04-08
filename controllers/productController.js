@@ -5,12 +5,22 @@ const path = require('path');
 const fs = require('fs');
 
 const getProducts = async (req, res) => {
-    try {
-        const products = await Product.getAllProducts();
-        res.json(products);
-    } catch (error) {
-        res.status(500).json({ error: 'Ошибка при получении товаров' });
-    }
+  try {
+      console.log('Попытка получения списка товаров...');
+      const products = await Product.getAllProducts();
+      console.log('Успешно получено товаров:', products.length);
+      res.json(products);
+  } catch (error) {
+      console.error('Ошибка при получении товаров:', {
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
+      });
+      res.status(500).json({ 
+          error: 'Ошибка при получении товаров',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+  }
 };
 
 const getProductById = async (req, res) => {
