@@ -7,7 +7,7 @@ const productRoutes = require('./routes/productRoutes');
 const consultationRoutes = require('./routes/consultationRoutes');
 const cors = require('cors');
 const corsOptions = {
-    origin: '*',  // Порт, на котором работает ваше Vue приложение
+    origin: 'http://localhost:5173',  // Порт, на котором работает ваше Vue приложение
     methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Разрешённые методы
     allowedHeaders: ['Content-Type']  // Разрешённые заголовки
 };
@@ -18,15 +18,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(cors(corsOptions)); 
 app.use(bodyParser.json());
-
-app.get('/', (req, res) => {
-    res.json({
-      status: 'API работает',
-      database: process.env.DATABASE_URL ? 'Подключено' : 'Не подключено',
-      timestamp: new Date().toISOString()
-    });
-  });
-
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/consultations', consultationRoutes);

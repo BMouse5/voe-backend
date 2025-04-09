@@ -2,27 +2,22 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const productController = require('../controllers/productController');
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
 
 
 const router = express.Router();
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET
-});
 
 // Настройка multer для сохранения изображений
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'voe-energy',
-    format: async (req, file) => 'png', // или jpeg
-    public_id: (req, file) => Date.now().toString()
-  }
-});
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/'); // Папка, куда будут сохраняться изображения
+    },
+    filename: (req, file, cb) => {
+      const fileName = Date.now() + path.extname(file.originalname); // Генерация уникального имени файла
+      cb(null, fileName);
+    }
+  });
   
 const upload = multer({ storage: storage });
 
