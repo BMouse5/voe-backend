@@ -13,8 +13,40 @@ const transporter = nodemailer.createTransport({
 });
 
 // Функция отправки email
+// ConsultationController.js
 const sendConsultationEmail = async (consultation) => {
     try {
+      // Формируем HTML для списка товаров
+      let cartItemsHTML = '';
+      if (consultation.cartItems && consultation.cartItems.length > 0) {
+        cartItemsHTML = `
+          <div class="field">
+              <span class="field-label">Товары в корзине:</span>
+          </div>
+          <div class="message-box">
+              <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                      <tr style="background-color: #f2f2f2;">
+                          <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Название</th>
+                          <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Количество</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      ${consultation.cartItems.map(item => `
+                          <tr>
+                              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.name}</td>
+                              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.quantity}</td>
+                          </tr>
+                      `).join('')}
+                  </tbody>
+              </table>
+              <p style="margin-top: 10px; font-weight: bold;">Всего товаров: ${consultation.cartItems.reduce((total, item) => total + item.quantity, 0)}</p>
+          </div>
+        `;
+      } else {
+        cartItemsHTML = '<div class="field"></div>';
+      }
+
       const mailOptions = {
         from: `"Форма заявок" <${process.env.GMAIL_USER}>`,
         to: process.env.ADMIN_EMAIL,
@@ -69,6 +101,10 @@ const sendConsultationEmail = async (consultation) => {
                       border-left: 4px solid #BE6105;
                       margin: 10px 0;
                   }
+                  table {
+                      width: 100%;
+                      margin-top: 10px;
+                  }
               </style>
           </head>
           <body>
@@ -94,6 +130,7 @@ const sendConsultationEmail = async (consultation) => {
                   <div class="message-box">
                       ${consultation.message}
                   </div>
+                  ${cartItemsHTML}
                   <div class="field">
                       <span class="field-label">Дата:</span>
                       ${new Date().toLocaleString('ru-RU')}
@@ -123,7 +160,7 @@ const sendConsultationEmail = async (consultation) => {
 
 // Контроллер создания заявки
 const createConsultation = async (req, res) => {
-  const { name, email, phone, message } = req.body;
+  const { name, email, phone, message, cartItems } = req.body; // Добавляем cartItems
 
   // Валидация
   if (!name || !email || !message) {
@@ -133,13 +170,19 @@ const createConsultation = async (req, res) => {
   }
 
   try {
-    // Сохраняем в БД
+    // Сохраняем в БД (только основные данные)
     const newConsultation = await Consultation.createConsultation(
       name, email, phone, message
     );
     
-    // Отправляем email
-    const emailSent = await sendConsultationEmail(newConsultation);
+    // Создаем объект с данными для email (включая cartItems)
+    const emailData = {
+      ...newConsultation,
+      cartItems: cartItems || [] // Добавляем товары из корзины
+    };
+    
+    // Отправляем email с полными данными
+    const emailSent = await sendConsultationEmail(emailData);
     
     if (!emailSent) {
       console.warn('Письмо не отправлено, но заявка сохранена');
@@ -158,5 +201,65 @@ const createConsultation = async (req, res) => {
     });
   }
 };
+const getAllConsultations = async (req, res) => {
+  try {
+      const consultations = await Consultation.getAllConsultations();
+      res.status(200).json({
+          success: true,
+          data: consultations
+      });
+  } catch (error) {
+      console.error('Error getting consultations:', error);
+      res.status(500).json({ 
+          error: 'Произошла ошибка при получении заявок' 
+      });
+  }
+};
 
-module.exports = { createConsultation };
+// Обновление статуса заявки
+const updateStatus = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { status_id } = req.body;
+
+      if (!status_id) {
+          return res.status(400).json({ 
+              error: 'Не указан новый статус' 
+          });
+      }
+
+      const updatedConsultation = await Consultation.updateConsultationStatus(id, status_id);
+      
+      res.status(200).json({
+          success: true,
+          data: updatedConsultation,
+          message: 'Статус заявки успешно обновлен'
+      });
+  } catch (error) {
+      console.error('Error updating status:', error);
+      res.status(500).json({ 
+          error: 'Произошла ошибка при обновлении статуса' 
+      });
+  }
+};
+
+// Удаление заявки
+const deleteConsultation = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const deletedConsultation = await Consultation.deleteConsultation(id);
+      
+      res.status(200).json({
+          success: true,
+          data: deletedConsultation,
+          message: 'Заявка успешно удалена'
+      });
+  } catch (error) {
+      console.error('Error deleting consultation:', error);
+      res.status(500).json({ 
+          error: 'Произошла ошибка при удалении заявки' 
+      });
+  }
+};
+
+module.exports = { createConsultation, getAllConsultations, updateStatus, deleteConsultation };

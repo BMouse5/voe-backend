@@ -28,18 +28,18 @@ const getProductsCountInCategory = async (categoryId) => {
     return parseInt(result.rows[0].count);
 };
 
-const createCategory = async (name, description, parent_id) => {
+const createCategory = async (name, description, parent_id, image_url) => {
     const result = await pool.query(
-        'INSERT INTO categories (name, description, parent_id) VALUES ($1, $2, $3) RETURNING *',
-        [name, description, parent_id]
+        'INSERT INTO categories (name, description, parent_id, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
+        [name, description, parent_id, image_url]
     );
     return result.rows[0];
 };
 
-const updateCategory = async (id, name, description, parent_id) => {
+const updateCategory = async (id, name, description, parent_id, image_url) => {
     const result = await pool.query(
-        'UPDATE categories SET name = $1, description = $2, parent_id = $3 WHERE id = $4 RETURNING *',
-        [name, description, parent_id, id]
+        'UPDATE categories SET name = $1, description = $2, parent_id = $3, image_url = $4 WHERE id = $5 RETURNING *',
+        [name, description, parent_id, image_url, id]
     );
     return result.rows[0];
 };
